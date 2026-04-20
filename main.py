@@ -11,8 +11,8 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-"http://localhost:3000"
-"http://https://app.netlify.com/projects/stupendous-praline-f80270"],
+"http://localhost:3000",
+"https://app.netlify.com/projects/stupendous-praline-f80270"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
