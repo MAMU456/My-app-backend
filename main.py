@@ -12,7 +12,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
 "http://localhost:3000",
-"https://app.netlify.com/projects/stupendous-praline-f80270"],
+"https://69e65ccd96abcd0008c4169b--stupendous-praline-f80270.netlify.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
