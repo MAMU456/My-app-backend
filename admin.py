@@ -8,10 +8,11 @@ from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
 from typing import List
+import os
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-SECRET_KEY = "your-secret-key-change-this"
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-local-dev-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -29,18 +30,6 @@ def create_admin_token(username: str):
         {"sub": username, "role": "admin", "exp": expire},
         SECRET_KEY, algorithm=ALGORITHM
     )
-
-# ── Create first admin (run once, then protect or remove) ──
-@router.post("/setup", response_model=Token)
-def setup_admin(data: AdminCreate, db: Session = Depends(get_db)):
-    existing = db.query(Admin).filter(Admin.username == data.username).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Admin already exists")
-    admin = Admin(username=data.username, password=hash_password(data.password))
-    db.add(admin)
-    db.commit()
-    token = create_admin_token(data.username)
-    return {"access_token": token, "token_type": "bearer"}
 
 # ── Admin Login ──
 @router.post("/login", response_model=Token)
@@ -107,12 +96,15 @@ def restore_user(user_id: int, db: Session = Depends(get_db), admin=Depends(get_
 # ── Stats ──
 @router.get("/stats")
 def get_stats(db: Session = Depends(get_db), admin=Depends(get_current_admin)):
+    from models import Order
     return {
         "total_users": db.query(User).count(),
         "active_users": db.query(User).filter(User.is_active == True).count(),
         "revoked_users": db.query(User).filter(User.is_active == False).count(),
         "total_products": db.query(Product).count(),
-        "total_vendors": db.query(Vendor).count()
+        "total_vendors": db.query(Vendor).count(),
+        "total_orders": db.query(Order).count(),
+        "pending_orders": db.query(Order).filter(Order.status == "pending").count()
     }
 
 # ── Vendor Management ──
@@ -151,7 +143,7 @@ def delete_vendor(vendor_id: int, db: Session = Depends(get_db), admin=Depends(g
 # ── Order Management ──
 @router.get("/orders")
 def get_all_orders(db: Session = Depends(get_db), admin=Depends(get_current_admin)):
-    from models import Order, User, Vendor
+    from models import Order
     orders = db.query(Order).order_by(Order.created_at.desc()).all()
     result = []
     for o in orders:
@@ -181,16 +173,3 @@ def update_order_status(order_id: int, status: str, db: Session = Depends(get_db
     order.status = status
     db.commit()
     return {"message": f"Order #{order_id} status updated to {status}"}
-
-@router.get("/stats")
-def get_stats(db: Session = Depends(get_db), admin=Depends(get_current_admin)):
-    from models import User, Product, Vendor, Order
-    return {
-        "total_users": db.query(User).count(),
-        "active_users": db.query(User).filter(User.is_active == True).count(),
-        "revoked_users": db.query(User).filter(User.is_active == False).count(),
-        "total_products": db.query(Product).count(),
-        "total_vendors": db.query(Vendor).count(),
-        "total_orders": db.query(Order).count(),
-        "pending_orders": db.query(Order).filter(Order.status == "pending").count()
-    }
