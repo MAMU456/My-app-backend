@@ -7,7 +7,7 @@ from auth import hash_password, verify_password, create_access_token
 
 router = APIRouter()
 
-@router.post("/register")
+@router.post("/registration")
 def register(user: UserCreate, db: Session = Depends(get_db)):
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == user.email).first()
