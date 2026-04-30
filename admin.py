@@ -30,7 +30,15 @@ def create_admin_token(username: str):
         {"sub": username, "role": "admin", "exp": expire},
         SECRET_KEY, algorithm=ALGORITHM
     )
-
+@router.post("/setup")
+def setup_admin(data: AdminCreate, db: Session = Depends(get_db)):
+    existing = db.query(Admin).filter(Admin.username == data.username).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Admin already exists")
+    admin = Admin(username=data.username, password=hash_password(data.password))
+    db.add(admin)
+    db.commit()
+    return {"message": "Admin created successfully"}
 # ── Admin Login ──
 @router.post("/login", response_model=Token)
 def admin_login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
