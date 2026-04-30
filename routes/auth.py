@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -10,7 +11,7 @@ from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-SECRET_KEY = "your-secret-key-change-this"
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-local-dev-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -35,15 +36,12 @@ def create_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    # Check for existing username
     existing_username = db.query(User).filter(User.username == user.username).first()
     if existing_username:
         raise HTTPException(status_code=400, detail="Username already taken")
-    
-    # Add this — check for existing email too!
+
     existing_email = db.query(User).filter(User.email == user.email).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
