@@ -12,7 +12,7 @@ import os
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-SECRET_KEY = os.getenv("SECRET_KEY", "fallback-local-dev-key")
+SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
