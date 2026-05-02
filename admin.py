@@ -39,6 +39,14 @@ def setup_admin(data: AdminCreate, db: Session = Depends(get_db)):
     db.add(admin)
     db.commit()
     return {"message": "Admin created successfully"}
+@router.delete("/setup")
+def delete_admin(username: str, db: Session = Depends(get_db)):
+    admin = db.query(Admin).filter(Admin.username == username).first()
+    if admin:
+        db.delete(admin)
+        db.commit()
+        return {"message": "Admin deleted"}
+    raise HTTPException(status_code=404, detail="Admin not found")
 # ── Admin Login ──
 @router.post("/login", response_model=Token)
 def admin_login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
