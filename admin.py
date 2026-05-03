@@ -34,7 +34,10 @@ def create_admin_token(username: str):
 def setup_admin(data: AdminCreate, db: Session = Depends(get_db)):
     existing = db.query(Admin).filter(Admin.username == data.username).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Admin already exists")
+        # Overwrite the password instead of blocking
+        existing.password = hash_password(data.password)
+        db.commit()
+        return {"message": "Admin password updated successfully"}
     admin = Admin(username=data.username, password=hash_password(data.password))
     db.add(admin)
     db.commit()
