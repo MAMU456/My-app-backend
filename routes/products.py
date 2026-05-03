@@ -7,7 +7,6 @@ from typing import List
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
-
 @router.post("/", response_model=ProductResponse)
 def create_product(
     product: ProductCreate,
@@ -24,11 +23,9 @@ def create_product(
     db.refresh(new_product)
     return new_product
 
-
 @router.get("/", response_model=List[ProductResponse])
 def get_all_products(db: Session = Depends(get_db)):
     return db.query(Product).all()
-
 
 @router.get("/{product_id}", response_model=ProductResponse)
 def get_product(product_id: int, db: Session = Depends(get_db)):
@@ -36,7 +33,6 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
-
 
 @router.put("/{product_id}", response_model=ProductResponse)
 def update_product(
@@ -54,7 +50,6 @@ def update_product(
     db.commit()
     db.refresh(product)
     return product
-
 
 @router.delete("/{product_id}")
 def delete_product(

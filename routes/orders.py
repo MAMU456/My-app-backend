@@ -9,12 +9,10 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 
 @router.post("/", response_model=OrderResponse)
 def place_order(order_data: OrderCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    # Validate vendor exists
     vendor = db.query(Vendor).filter(Vendor.id == order_data.vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor not found")
 
-    # Build order items and calculate total
     order_items = []
     total = 0.0
 
@@ -32,7 +30,6 @@ def place_order(order_data: OrderCreate, db: Session = Depends(get_db), current_
             subtotal=subtotal
         ))
 
-    # Create order
     new_order = Order(
         user_id=current_user.id,
         vendor_id=order_data.vendor_id,
@@ -45,13 +42,11 @@ def place_order(order_data: OrderCreate, db: Session = Depends(get_db), current_
     db.commit()
     db.refresh(new_order)
 
-    # Attach items
     for item in order_items:
         item.order_id = new_order.id
         db.add(item)
     db.commit()
     db.refresh(new_order)
-
     return new_order
 
 @router.get("/my", response_model=List[OrderResponse])

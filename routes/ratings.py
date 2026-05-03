@@ -24,7 +24,6 @@ def rate_vendor(
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor not found")
 
-    # Check user has ordered from this vendor
     has_ordered = db.query(Order).filter(
         Order.user_id == current_user.id,
         Order.vendor_id == vendor_id
@@ -32,7 +31,6 @@ def rate_vendor(
     if not has_ordered:
         raise HTTPException(status_code=403, detail="You can only rate vendors you have ordered from")
 
-    # Check if already rated — update if so
     existing = db.query(VendorRating).filter(
         VendorRating.user_id == current_user.id,
         VendorRating.vendor_id == vendor_id
@@ -50,7 +48,6 @@ def rate_vendor(
 
     db.commit()
 
-    # Recalculate vendor average rating
     avg = db.query(func.avg(VendorRating.rating)).filter(
         VendorRating.vendor_id == vendor_id
     ).scalar()
