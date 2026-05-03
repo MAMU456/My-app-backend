@@ -88,6 +88,25 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin=Depends
     db.delete(product)
     db.commit()
     return {"message": "Product deleted"}
+@router.get("/debug")
+def debug_token(token: str = Depends(admin_oauth2_scheme), db: Session = Depends(get_db)):
+    import os
+    from jose import jwt
+    SECRET = os.getenv("SECRET_KEY", "supersecretkey")
+    try:
+        payload = jwt.decode(token, SECRET, algorithms=["HS256"])
+        username = payload.get("sub")
+        role = payload.get("role")
+        admin = db.query(Admin).filter(Admin.username == username).first()
+        return {
+            "payload": payload,
+            "secret_used": SECRET,
+            "role": role,
+            "admin_found": admin is not None,
+            "admin_username": admin.username if admin else None
+        }
+    except Exception as e:
+        return {"error": str(e), "secret_used": SECRET}
 
 # ── User Management ──
 @router.get("/users", response_model=List[UserResponse])
